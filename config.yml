@@ -1,0 +1,11 @@
+filter-ops: true
+filtered-chat-message: "&e&l[Error!]: &f&rA forbidden keyword is included in your message."
+filtered-command-message: "&e&l[Error!]: &f&rA forbidden keyword is included in the command or argument you used."
+config-saved-message: "&e&l[Information]: &f&rFilter saved."
+invalid-username-message: "&e&l[Error!]: &f&rInvalid username."
+no-permission-message: "&e&l[Error!]: &f&rYou are not an operator and you do not have permissions."
+invalid-configuration-message: "&e&l[Error!]: &f&rThe configuration name you want so set, or its value is invalid."
+command-filters: []
+command-redirects: []
+chat-filters: []
+chat-redirects: []
