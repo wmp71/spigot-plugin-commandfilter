@@ -1,6 +1,6 @@
 name: CommandFilter
 main: com.pb.commandfilter.CommandFilter
-version: 1.10
+version: 1.11
 api-version: 1.13
 commands:
    commandfilter:

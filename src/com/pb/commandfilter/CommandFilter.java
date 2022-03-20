@@ -2,6 +2,7 @@ package com.pb.commandfilter;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -12,6 +13,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.Event;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
 public class CommandFilter extends JavaPlugin implements Listener {
@@ -21,22 +24,48 @@ public class CommandFilter extends JavaPlugin implements Listener {
     public void onEnable() {
 		config.options().copyDefaults(true);
 		this.saveConfig();
-		
-		this.getCommand("commandfilter").setExecutor(new CommandFilterSet(this, config));
+
+		this.getCommand("commandfilter").setExecutor(new CommandFilterSet(this, config, "command"));
+		this.getCommand("chatfilter").setExecutor(new CommandFilterSet(this, config, "chat"));
 		
 		this.getServer().getPluginManager().registerEvents(this, this);
 	}
 	
 	@EventHandler(priority=EventPriority.LOWEST, ignoreCancelled=true)
+	public void onPlayerChat(AsyncPlayerChatEvent event) {
+		Player player = event.getPlayer();
+		if(player == null) return;
+		if(!this.getConfig().getBoolean("filter-ops") && player.isOp()) return;
+		String msg = event.getMessage();
+		List<String> filters = Stream.concat(this.getConfig().getStringList("chat-filters._").stream(), this.getConfig().getStringList("chat-filters." + player.getUniqueId()).stream()).collect(Collectors.toList());
+		
+		for(String regex : filters) {
+			try {
+		        if(msg.matches(regex)) {
+		        	player.sendMessage(ChatColor.translateAlternateColorCodes('&', this.getConfig().getString("filtered-chat-message")));
+		    		event.setCancelled(true);
+		    		return;
+		        }
+		    } catch (PatternSyntaxException e) {
+		        continue;
+		    }
+		}
+	}
+	
+	@EventHandler(priority=EventPriority.LOWEST, ignoreCancelled=true)
     public void onCommand(PlayerCommandPreprocessEvent event) {
 		Player player = event.getPlayer();
-		String cmd = event.getMessage().replace("/", "");
-		List<String> filters = Stream.concat(this.getConfig().getStringList("_").stream(), this.getConfig().getStringList(player.getName()).stream()).collect(Collectors.toList());
+		if(player == null) return;
+		if(!this.getConfig().getBoolean("filter-ops") && player.isOp()) return;
+		String cmd = event.getMessage().replaceFirst("[/]", "");
+
+		List<String> filters = Stream.concat(this.getConfig().getStringList("command-filters._").stream(), this.getConfig().getStringList("command-filters." + player.getUniqueId()).stream()).collect(Collectors.toList());
 		
 		for(String regex : filters) {
 			try {
 		        if(cmd.matches(regex)) {
-		        	player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&e&l[ì˜¤ë¥˜!]: &f&rëª…ë ¹ì–´ì— í—ˆìš©ë˜ì§€ ì•Šì€ í‚¤ì›Œë“œê°€ í¬í•¨ë˜ì–´ ìˆìŠµë‹ˆë‹¤"));
+		        	/* "&e&l[¿À·ù!]: &f&r¸í·É¾î¿¡ Çã¿ëµÇÁö ¾ÊÀº Å°¿öµå°¡ Æ÷ÇÔµÇ¾î ÀÖ½À´Ï´Ù" */
+		        	player.sendMessage(ChatColor.translateAlternateColorCodes('&', this.getConfig().getString("filtered-command-message")));
 		    		event.setCancelled(true);
 		    		return;
 		        }
